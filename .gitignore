@@ -80,5 +80,5 @@ dmypy.json
 # Ignore macOS Finder settings files
 .DS_Store
 
-# Pyre type checker
-.pyre/
+# ignore changes in config.py
+config.py
