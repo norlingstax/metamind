@@ -1,6 +1,6 @@
 # DOCUMENTATION 
 
-This document aims to explain the high level workflow of our project by a diagram approach then breaks down each supporting module/script purpose
+This document aims to explain the high level workflow of the project by a diagram approach then breaks down each supporting module/script by purpose.
 
 ## Simple Agentic Architecture Diagram
 ```mermaid
@@ -15,17 +15,17 @@ flowchart TD
    C --> I[<b>UI Ouput</b>] 
    D --> I
 ```
-## Scripts/Local Dependencies description 
+## Scripts and Local Dependencies 
 
 ### UI Layer
 - `interface_V2.py` (runnable)
 
-Streamlit user interface that load data, dependencies, triggers analysis workflow and display the results.
+Streamlit user interface that loads data and dependencies, triggers analysis workflow and displays the results.
 
 ### Configuration
 - `config.py` (module)
 
-Set API credentials, model settings(like temperature, max_tokens) and agents parameters
+Sets API credentials, model settings (e.g., temperature, max_tokens) and agents' parameters.
 
 ### LLM Layer 
 - `base_llm.py` (module)
@@ -40,7 +40,7 @@ The agents communicate with the model using the OpenAI-style API payloads and pa
 - `tom_agent.py` (module)
 - `domain_agent.py` (module)
 
-ToM and Domain refinements agent from the original MetaMind framework
+ToM and Domain refinements agent from the original MetaMind framework.
 
 ### Memory Layer
 
@@ -58,19 +58,17 @@ Prompt templates injected into LLM calls across different stages of the pipeline
 
 - `raw_sentiment.py`(module)
 
-One-shot sentiment analysis call to the LLM that ouput a JSON - invoked directly from the UI for comparison purpose-
+One-shot sentiment analysis call to the LLM that outputs a JSON. Invoked directly from the UI for comparison purpose.
+
 ### MetaMind Analysis
 
 - `sentiment.py` (module)
 - `recommandation_text.py` (module)
 
-Orchestrates the agentic pipeline with the 3 agent (+TOM and Domain) making hypothesis enrichment, synthesis, aspects extraction and recommandations. It also ensure the JSONS format of the ouput and human readable recommandations from the resulted JSON. 
+Orchestrates the agentic pipeline with the 3 agents (+ToM and Domain) making hypothesis enrichment, synthesis, aspects extraction and recommandations. It also ensures the JSON format of the output and human readable recommandations from the resulted JSON. 
 
-### Utilites 
+### Utilities
 
 - `helpers.py` (helper)
 
-A JSON parsing helper used everywhere in the pipeline 
-
-
-
+A JSON parsing helper used everywhere in the pipeline.
