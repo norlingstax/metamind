@@ -3,8 +3,14 @@
 # LLM API settings
 import os 
 
+# UI / Dataset settings
+DATASET_CONFIG = {
+    # Path to the CSV file used by the Streamlit demo UI
+    "reviews_csv_path": "data/raw/forrestgump_test.csv",
+}
+
 # set to True to use OpenAI API (remote), False to use Ollama (local)
-USE_REMOTE = True
+USE_REMOTE = False
 
 if USE_REMOTE:
     
@@ -20,7 +26,7 @@ else:
     LLM_CONFIG = {
         "api_key": "ollama",  # dummy key for local usage
         "base_url": "http://localhost:11434/v1",
-        "model_name": "llama3:8b",
+        "model_name": "phi3:mini",
         "temperature": 0.1,
         "max_tokens": 1000
     }

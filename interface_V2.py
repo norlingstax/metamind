@@ -2,7 +2,7 @@ from typing import Any, Dict
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 from baselines.raw_sentiment import baseline_sentiment_json
-from config import LLM_CONFIG
+from config import LLM_CONFIG, DATASET_CONFIG
 from llm_interface import OpenAILLM
 import pandas as pd
 from analysis.sentiment import metamind_sentiment_json
@@ -24,8 +24,9 @@ def main():
     st.set_page_config(page_title="MetaMind Sentiment Demo", layout="wide")
     st.title(" MetaMind Sentiment Demo")
 
-    # load the csv of reviews
-    df = pd.read_csv("data/clean/Iphone.csv", header=None, names=["Review"])
+    # load the csv of reviews from config
+    csv_path = DATASET_CONFIG.get("reviews_csv_path")
+    df = pd.read_csv(csv_path, header=None, names=["Review"])
 
     # display the tale
     gb = GridOptionsBuilder.from_dataframe(df)
