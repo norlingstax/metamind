@@ -16,8 +16,36 @@ def _normalize_weights(values: List[float]) -> List[float]:
 
 def heuristic_sentiment_from_hypotheses(hypotheses: List[Dict[str, Any]]) -> Tuple[str, float]:
     """
-    Deterministic fallback sentiment from ToM/Domain hypotheses using config-driven
-    cues and weights. Returns (polarity, confidence).
+    Compute a deterministic, config-driven sentiment from a list of ToM/Domain
+    hypotheses. Used as a safety net (fallback and default filler) when the LLM
+    synthesis returns malformed/partial JSON, or when you explicitly want a
+    non-stochastic baseline.
+
+    Inputs
+    - hypotheses: List of hypothesis dicts. Each item should include:
+        - "type": str (Belief|Desire|Intention|Emotion|Thought|Unknown)
+        - "explanation": str (free text from ToM/Domain)
+      and may include weighting signals used here:
+        - "score": float (preferred)
+        - "p_cond": float (fallback if score is missing)
+
+    Method
+    - Weights hypotheses by normalized `score` (or `p_cond`).
+    - Applies cue lists from config (global + type-specific) to the hypothesis
+      explanation text, accumulating positive/negative evidence with tunable
+      weights (SENTIMENT_WEIGHTS).
+    - Adds a small negative prior for Desire types (configurable) to reflect
+      often-unmet preferences unless stated positively.
+
+    Returns
+    - (polarity, confidence):
+        - polarity in {"positive", "neutral", "negative"}
+        - confidence in [0,1], loosely reflecting evidence magnitude
+        
+    Notes
+    - This does not call the LLM; it is fast and deterministic given inputs and
+      config. Adjust `SENTIMENT_CUES` and `SENTIMENT_WEIGHTS` in config.py to
+      tune behavior or effectively disable it (e.g., set weights to 0).
     """
     if not hypotheses:
         return "neutral", 0.4
@@ -110,6 +138,32 @@ def synthesize_with_llm(
     hypotheses: List[Dict[str, Any]],
     max_retries: int = 1
 ) -> Optional[Dict[str, Any]]:
+    """
+    Consolidate ToM/Domain hypotheses into a single sentiment JSON using the
+    SENTIMENT_SYNTHESIS_JSON prompt.
+
+    Parameters
+    - llm: A BaseLLM implementation. Only `.generate()` is used.
+    - user_input: The raw user review/utterance (u_t).
+    - conversation_context: List of turns with shape
+      [{"speaker": str, "utterance": str}, ...]. This is formatted and
+      passed as C_t in the prompt.
+    - hypotheses: List of hypothesis dicts produced by ToM/Domain. Each item
+      should include at least "explanation" and "type", and ideally "score",
+      "p_cond", and "ig". Top-k (by score, fallback p_cond) are embedded in
+      the prompt to anchor the LLM.
+    - max_retries: Number of additional attempts (with stricter JSON reminder)
+      if parsing fails. Total attempts = max_retries + 1.
+
+    Returns
+    - Dict[str, Any] on success (keys like polarity, intensity, aspects,
+      evidence, confidence) with source="metamind"; or None when parsing fails
+      after all retries.
+
+    Notes
+    - Uses utils.helpers.parse_json_from_string; does not throw on LLM errors.
+    - Determinism depends on model/temperature; prompt enforces strict JSON.
+    """
     C_t = _format_context(conversation_context)
     top = _top_k_hypotheses(hypotheses)
     prompt = EXTRA_SENTIMENT_PROMPTS["SENTIMENT_SYNTHESIS_JSON"].format(
@@ -134,6 +188,24 @@ def extract_aspects_with_llm(
     conversation_context: List[Dict[str, str]],
     max_retries: int = 1
 ) -> List[Dict[str, Any]]:
+    """
+    Extract per-aspect sentiment from input/context via ASPECT_EXTRACTION_JSON.
+
+    Parameters
+    - llm: BaseLLM used for generation.
+    - user_input: Raw review/utterance (u_t).
+    - conversation_context: Turns [{"speaker", "utterance"}] formatted as C_t.
+    - max_retries: Retry count on JSON parse failure.
+
+    Returns
+    - List of {name, sentiment, evidence} dicts; empty list on persistent
+      parsing failure.
+
+    Notes
+    - Independent from synthesis; callers usually merge aspects into the
+      synthesized result if missing, or use alongside heuristic fallback.
+    - No deduping/normalization is applied here.
+    """
     C_t = _format_context(conversation_context)
     prompt = EXTRA_SENTIMENT_PROMPTS["ASPECT_EXTRACTION_JSON"].format(u_t=user_input, C_t=C_t)
 
@@ -157,10 +229,30 @@ def generate_recommendation_with_llm(
     max_retries: int = 1,
 ) -> Dict[str, Any]:
     """
-    Third-stage insight generator. Produces a concise JSON with:
-    - summary: one-sentence overview
-    - drivers: brief explanation referencing aspects/evidence
-    - actions: short recommendations list (may be empty for positive sentiment)
+    Third-stage insight generator building on sentiment and aspects. It asks the
+    LLM to produce a concise business insight and recommendations using the
+    RECOMMENDATION_SUMMARY_JSON prompt.
+
+    Parameters
+    - llm: BaseLLM used to generate the JSON (only `.generate()` is required).
+    - user_input: Original review/utterance (u_t).
+    - conversation_context: Recent turns for C_t formatting.
+    - aspects: List of {name, sentiment, evidence} dicts from aspect extraction.
+    - polarity: Overall sentiment label (positive|neutral|negative).
+    - intensity: Overall sentiment intensity in [0,1].
+    - max_retries: Retry count on JSON parse failure.
+
+    Returns
+    - Dict with keys {summary: str, drivers: str, actions: [str]}. Falls back to
+      a deterministic template if JSON parsing fails (positive -> brief
+      acknowledgement; neutral/negative -> short actionable steps derived from
+      negative aspects).
+
+    Notes
+    - This function does not alter upstream results; callers typically attach
+      its output under a "recommendation" key in the final payload.
+    - Evidence and aspect names are assumed as-is; consider normalization if you
+      need consistent reporting across datasets.
     """
     C_t = _format_context(conversation_context)
     aspects_json = str(aspects)
