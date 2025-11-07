@@ -1,14 +1,14 @@
 # Configuration settings for Metamind system
 
-# LLM API settings
 import os 
 
-# UI / Dataset settings
+# Dataset settings
 DATASET_CONFIG = {
     # Path to the CSV file used by the Streamlit demo UI
-    "reviews_csv_path": "data/raw/forrestgump_test.csv",
+    "reviews_csv_path": "data/clean/Iphone.csv",
 }
 
+# LLM API settings
 # set to True to use OpenAI API (remote), False to use Ollama (local)
 USE_REMOTE = False
 

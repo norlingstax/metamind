@@ -26,7 +26,7 @@ def main():
 
     # load the csv of reviews from config
     csv_path = DATASET_CONFIG.get("reviews_csv_path")
-    df = pd.read_csv(csv_path, header=None, names=["Review"])
+    df = pd.read_csv(csv_path, header=None, names=["Review"], sep="\t")
 
     # display the tale
     gb = GridOptionsBuilder.from_dataframe(df)
