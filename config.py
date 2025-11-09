@@ -10,7 +10,7 @@ DATASET_CONFIG = {
 
 # LLM API settings
 # set to True to use OpenAI API (remote), False to use Ollama (local)
-USE_REMOTE = False
+USE_REMOTE = True
 
 if USE_REMOTE:
     
