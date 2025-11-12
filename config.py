@@ -5,7 +5,7 @@ import os
 # Dataset settings
 DATASET_CONFIG = {
     # Path to the CSV file used by the Streamlit demo UI
-    "reviews_csv_path": "data/clean/Iphone.csv",
+    "reviews_csv_path": "data/clean/SamsungS25FE.csv",
 }
 
 # LLM API settings
