@@ -23,6 +23,11 @@ We only document our additions and how to run them. For the original MetaMind sy
   - Strict JSON prompts + guarded parsing and small retries.
   - Optional, config‑driven fallback used only when JSON is malformed or incomplete.
 
+- Deep-dive dashboard & cache
+  - Optional toggle (`DATASET_CONFIG["deepdive_enabled"]`) to show aggregate charts.
+  - Cached JSONL per dataset (`<dataset>_deepdive.jsonl` under `data/processed/`) generated via `python -m analysis.precompute_deepdive`.
+  - When the toggle is on but the JSONL cache is missing, the UI stays in the lightweight mode and shows a reminder to compute the cache first.
+
 For a deeper, code‑level pipeline description, see [DOCUMENTATION.md](https://github.com/norlingstax/metamind/blob/main/DOCUMENTATION.md).
 
 ## Why It Matters (Marketing Impact)
@@ -60,6 +65,8 @@ pip install -r requirements.txt
 
 - Open `config.py` and set `LLM_CONFIG` (model, base_url, api key as appropriate).
 - Set `DATASET_CONFIG["reviews_csv_path"]` to your CSV of reviews.
+- Place your CSV under `data/raw/` (default) so caches are stored under `data/processed/` with names like `Iphone17_deepdive.jsonl`.
+- Turn `DATASET_CONFIG["deepdive_enabled"]` on/off to control the aggregate dashboards. When it's on, run `python -m analysis.precompute_deepdive` once per dataset to populate the cache.
 - For deeper MetaMind configs/architecture, see the upstream repo.
 
 4) Run the Streamlit demo
