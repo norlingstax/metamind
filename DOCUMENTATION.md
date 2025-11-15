@@ -18,7 +18,7 @@ flowchart TD
 ## Scripts and Local Dependencies 
 
 ### UI Layer
-- `interface_V2.py` (runnable)
+- `interface.py` (runnable)
 
 Streamlit user interface that loads data and dependencies, triggers analysis workflow and displays the results.
 
@@ -64,11 +64,15 @@ One-shot sentiment analysis call to the LLM that outputs a JSON. Invoked directl
 
 - `sentiment.py` (module)
 - `recommandation_text.py` (module)
+- `analysis/precompute_deepdive.py` (script)
 
-Orchestrates the agentic pipeline with the 3 agents (+ToM and Domain) making hypothesis enrichment, synthesis, aspects extraction and recommandations. It also ensures the JSON format of the output and human readable recommandations from the resulted JSON. 
+Orchestrates the agentic pipeline with the 3 agents (+ToM and Domain) making hypothesis enrichment, synthesis, aspects extraction and recommandations. It also ensures the JSON format of the output and human readable recommandations from the resulted JSON.  
+`analysis/precompute_deepdive.py` reuses the same baseline + MetaMind pipeline to iterate through the entire dataset and cache results into `<dataset>_deepdive.jsonl`. The Streamlit UI checks `DATASET_CONFIG["deepdive_enabled"]` and only renders the aggregate dashboards when that cache exists; otherwise the page stays in lightweight/live-analysis mode and surfaces a reminder to generate the file.
 
 ### Utilities
 
 - `helpers.py` (helper)
+- `dataset_utils.py` (helper)
 
-A JSON parsing helper used everywhere in the pipeline.
+`helpers.parse_json_from_string()` is a JSON parsing helper used everywhere the LLM may emit markdown/fenced outputs.  
+`dataset_utils.get_dataset_paths()` normalizes the dataset CSV location and derives the deep-dive cache path (using the `data/raw` -> `data/processed` convention and suffix in `config.py`), while `load_reviews_dataframe()` handles the various CSV layouts used in the demo datasets.

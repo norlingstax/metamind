@@ -5,12 +5,20 @@ import os
 # Dataset settings
 DATASET_CONFIG = {
     # Path to the CSV file used by the Streamlit demo UI
-    "reviews_csv_path": "data/clean/Iphone.csv",
+    "reviews_csv_path": "data/raw/SamsungS25FE.csv",
+    # Optional separator for single-column CSVs (set to None to auto-detect)
+    "reviews_csv_separator": "	",
+    # Enable/disable the deep-dive dashboard (requires cached JSONL)
+    "deepdive_enabled": True,
+    # Directory where deep-dive cache files are stored
+    "deepdive_dir": "data/processed",
+    # Suffix appended to dataset stem when naming the JSONL cache
+    "deepdive_suffix": "_deepdive.jsonl",
 }
 
 # LLM API settings
 # set to True to use OpenAI API (remote), False to use Ollama (local)
-USE_REMOTE = False
+USE_REMOTE = True
 
 if USE_REMOTE:
     
